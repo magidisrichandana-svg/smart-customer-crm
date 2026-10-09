@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Customer Details</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<h1>Customer Details</h1>
+
+<p><b>Name:</b> {{ customer.name }}</p>
+<p><b>Company:</b> {{ customer.company_name }}</p>
+<p><b>Status:</b> {{ customer.prospect_status }}</p>
+<p><b>Phone:</b> {{ customer.phone }}</p>
+<p><b>Email:</b> {{ customer.email }}</p>
+<p><b>Address:</b> {{ customer.address }}</p>
+<p><b>City:</b> {{ customer.city }}</p>
+<p><b>Country:</b> {{ customer.country }}</p>
+<p><b>Income Source:</b> {{ customer.income_source }}</p>
+<p><b>Tags:</b> {{ customer.tags }}</p>
+<p><b>Notes:</b> {{ customer.notes }}</p>
+
+<br>
+<a href="/customers">Back to Customers</a>
+
+</body>
+</html>
