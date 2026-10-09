@@ -1,4 +1,3 @@
-
 from flask import (
     Flask, render_template, request,
     redirect, url_for, make_response, flash
@@ -10,34 +9,52 @@ from io import StringIO
 
 app = Flask(__name__)
 
-# Secret key: set SECRET_KEY environment variable for deployment
 app.secret_key = os.environ.get(
     "SECRET_KEY",
     "dev-only-change-me"
 )
 
-
 # ==============================
-# MYSQL CONNECTION
+# DATABASE CONNECTION & INIT
 # ==============================
-
 def get_db_connection():
-    return mysql.connector.connect(
-        host=os.environ.get("DB_HOST", "localhost"),
-        user=os.environ.get("DB_USER", "root"),
-        password=os.environ.get("DB_PASSWORD"),
-        database=os.environ.get("DB_NAME", "crm_db")
-    )
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_db():
+    conn = get_db_connection()
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS customers (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            company_name TEXT,
+            prospect_status TEXT,
+            phone TEXT,
+            email TEXT,
+            address TEXT,
+            city TEXT,
+            country TEXT,
+            income_source TEXT,
+            tags TEXT,
+            notes TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+# Initialize table on start
+init_db()
 
 
 # ==============================
 # DASHBOARD
 # ==============================
-
 @app.route("/")
 def dashboard():
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor()
 
     try:
         cursor.execute("SELECT COUNT(*) AS total FROM customers")
@@ -64,37 +81,33 @@ def dashboard():
             recent_customers=recent_customers
         )
     finally:
-        cursor.close()
         db.close()
 
 
 # ==============================
 # CUSTOMER LIST AND SEARCH
 # ==============================
-
 @app.route("/customers")
 def customers():
     search = request.args.get("search", "").strip()
 
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor()
 
     try:
         if search:
             value = f"%{search}%"
             cursor.execute("""
                 SELECT * FROM customers
-                WHERE name LIKE %s
-                   OR company_name LIKE %s
-                   OR phone LIKE %s
-                   OR email LIKE %s
-                   OR tags LIKE %s
+                WHERE name LIKE ?
+                   OR company_name LIKE ?
+                   OR phone LIKE ?
+                   OR email LIKE ?
+                   OR tags LIKE ?
                 ORDER BY id DESC
             """, (value, value, value, value, value))
         else:
-            cursor.execute(
-                "SELECT * FROM customers ORDER BY id DESC"
-            )
+            cursor.execute("SELECT * FROM customers ORDER BY id DESC")
 
         customer_list = cursor.fetchall()
 
@@ -104,14 +117,12 @@ def customers():
             search=search
         )
     finally:
-        cursor.close()
         db.close()
 
 
 # ==============================
 # ADD CUSTOMER
 # ==============================
-
 @app.route("/add", methods=["GET", "POST"])
 def add_customer():
     if request.method == "POST":
@@ -141,8 +152,7 @@ def add_customer():
                     phone, email, address, city, country,
                     income_source, tags, notes
                 )
-                VALUES (%s, %s, %s, %s, %s, %s,
-                        %s, %s, %s, %s, %s)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 name, company_name, prospect_status,
                 phone, email, address, city, country,
@@ -152,12 +162,11 @@ def add_customer():
             db.commit()
             flash("Customer added successfully!")
 
-        except mysql.connector.Error:
+        except sqlite3.Error:
             db.rollback()
             flash("Could not add customer. Please check the database.")
 
         finally:
-            cursor.close()
             db.close()
 
         return redirect(url_for("customers"))
@@ -168,17 +177,13 @@ def add_customer():
 # ==============================
 # VIEW CUSTOMER
 # ==============================
-
 @app.route("/view/<int:id>")
 def view_customer(id):
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor()
 
     try:
-        cursor.execute(
-            "SELECT * FROM customers WHERE id = %s",
-            (id,)
-        )
+        cursor.execute("SELECT * FROM customers WHERE id = ?", (id,))
         customer = cursor.fetchone()
 
         if customer is None:
@@ -189,24 +194,19 @@ def view_customer(id):
             customer=customer
         )
     finally:
-        cursor.close()
         db.close()
 
 
 # ==============================
 # EDIT CUSTOMER
 # ==============================
-
 @app.route("/edit/<int:id>", methods=["GET", "POST"])
 def edit_customer(id):
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor()
 
     try:
-        cursor.execute(
-            "SELECT * FROM customers WHERE id = %s",
-            (id,)
-        )
+        cursor.execute("SELECT * FROM customers WHERE id = ?", (id,))
         customer = cursor.fetchone()
 
         if customer is None:
@@ -231,18 +231,18 @@ def edit_customer(id):
 
             cursor.execute("""
                 UPDATE customers
-                SET name = %s,
-                    company_name = %s,
-                    prospect_status = %s,
-                    phone = %s,
-                    email = %s,
-                    address = %s,
-                    city = %s,
-                    country = %s,
-                    income_source = %s,
-                    tags = %s,
-                    notes = %s
-                WHERE id = %s
+                SET name = ?,
+                    company_name = ?,
+                    prospect_status = ?,
+                    phone = ?,
+                    email = ?,
+                    address = ?,
+                    city = ?,
+                    country = ?,
+                    income_source = ?,
+                    tags = ?,
+                    notes = ?
+                WHERE id = ?
             """, (
                 name, company_name, prospect_status,
                 phone, email, address, city, country,
@@ -258,33 +258,26 @@ def edit_customer(id):
             customer=customer
         )
     finally:
-        cursor.close()
         db.close()
 
 
 # ==============================
 # DELETE CUSTOMER
 # ==============================
-
 @app.route("/delete/<int:id>", methods=["POST"])
 def delete_customer(id):
     db = get_db_connection()
-    cursor = db.cursor()
 
     try:
-        cursor.execute(
-            "DELETE FROM customers WHERE id = %s",
-            (id,)
-        )
+        db.execute("DELETE FROM customers WHERE id = ?", (id,))
         db.commit()
         flash("Customer deleted successfully!")
 
-    except mysql.connector.Error:
+    except sqlite3.Error:
         db.rollback()
         flash("Could not delete customer.")
 
     finally:
-        cursor.close()
         db.close()
 
     return redirect(url_for("customers"))
@@ -293,11 +286,10 @@ def delete_customer(id):
 # ==============================
 # EXPORT CUSTOMERS TO CSV
 # ==============================
-
 @app.route("/export")
 def export_customers():
     db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
+    cursor = db.cursor()
 
     try:
         cursor.execute("""
@@ -309,7 +301,6 @@ def export_customers():
         """)
         customer_list = cursor.fetchall()
     finally:
-        cursor.close()
         db.close()
 
     output = StringIO()
@@ -326,23 +317,15 @@ def export_customers():
 
     for customer in customer_list:
         writer.writerow([
-            customer.get(column) for column in columns
+            customer[column] for column in columns
         ])
 
     response = make_response(output.getvalue())
-    response.headers["Content-Disposition"] = (
-        "attachment; filename=customers.csv"
-    )
-    response.headers["Content-Type"] = (
-        "text/csv; charset=utf-8"
-    )
+    response.headers["Content-Disposition"] = "attachment; filename=customers.csv"
+    response.headers["Content-Type"] = "text/csv; charset=utf-8"
 
     return response
 
-
-# ==============================
-# RUN APPLICATION LOCALLY
-# ==============================
 
 if __name__ == "__main__":
     app.run(debug=True)
