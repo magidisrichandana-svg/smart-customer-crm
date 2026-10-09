@@ -3,7 +3,7 @@ from flask import (
     Flask, render_template, request,
     redirect, url_for, make_response, flash
 )
-import mysql.connector
+import sqlite3
 import csv
 import os
 from io import StringIO
