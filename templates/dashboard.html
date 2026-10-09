@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smart Customer CRM</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="header">
+    <h1>Smart Customer CRM</h1>
+</div>
+
+<div class="container">
+
+    <div class="cards">
+
+        <div class="card">
+            <h2>{{ total }}</h2>
+            <p>Total Customers</p>
+        </div>
+
+        <div class="card">
+            <h2>Add</h2>
+            <p>New Customer</p>
+            <a href="/add" class="btn">Add Customer</a>
+        </div>
+
+        <div class="card">
+            <h2>View</h2>
+            <p>Customer List</p>
+            <a href="/customers" class="btn">View Customers</a>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

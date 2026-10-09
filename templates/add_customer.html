@@ -1,0 +1,133 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Customer | Smart CRM</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <nav class="navbar">
+        <a class="brand" href="{{ url_for('dashboard') }}">✦ SmartCRM</a>
+        <div class="nav-links">
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('customers') }}">Customers</a>
+            <a class="nav-active" href="{{ url_for('add_customer') }}">+ Add Customer</a>
+        </div>
+    </nav>
+
+    <main class="page-container">
+        <section class="form-card">
+            <div class="form-heading">
+                <div class="heading-icon">✦</div>
+                <div>
+                    <p class="eyebrow">CUSTOMER MANAGEMENT</p>
+                    <h1>Add New Customer</h1>
+                    <p class="subtitle">Enter the details below to add a customer to your CRM.</p>
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('add_customer') }}">
+                <div class="form-grid">
+
+                    <div class="form-group">
+                        <label for="name">Customer Name <span>*</span></label>
+                        <input id="name" name="name" type="text"
+                               placeholder="Enter full name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="company_name">Company Name</label>
+                        <input id="company_name" name="company_name" type="text"
+                               placeholder="Enter company name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="prospect_status">Prospect Status</label>
+                        <select id="prospect_status" name="prospect_status">
+                            <option value="">Select status</option>
+                            <option value="New">New</option>
+                            <option value="Contacted">Contacted</option>
+                            <option value="Qualified">Qualified</option>
+                            <option value="Converted">Converted</option>
+                            <option value="Lost">Lost</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input id="phone" name="phone" type="tel"
+                               placeholder="Enter phone number">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input id="email" name="email" type="email"
+                               placeholder="name@example.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="income_source">Income Source</label>
+                        <input id="income_source" name="income_source" type="text"
+                               placeholder="e.g. Referral, Website">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="address">Address</label>
+                        <textarea id="address" name="address" rows="2"
+                                  placeholder="Enter street address"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="city">City</label>
+                        <input id="city" name="city" type="text"
+                               placeholder="Enter city">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="country">Country</label>
+                        <input id="country" name="country" type="text"
+                               placeholder="Enter country">
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="tags">Tags</label>
+                        <input id="tags" name="tags" type="text"
+                               placeholder="e.g. VIP, Business, Follow-up">
+                        <small>Separate multiple tags with commas.</small>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label for="notes">Notes</label>
+                        <textarea id="notes" name="notes" rows="3"
+                                  placeholder="Add any additional customer notes..."></textarea>
+                    </div>
+
+                </div>
+
+                <div class="form-actions">
+                    <a class="btn btn-secondary" href="{{ url_for('customers') }}">
+                        Cancel
+                    </a>
+                    <button class="btn btn-primary" type="submit">
+                        Save Customer <span>→</span>
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <p class="footer-note">SmartCRM · Keep your customer relationships organized.</p>
+    </main>
+
+</body>
+</html>
